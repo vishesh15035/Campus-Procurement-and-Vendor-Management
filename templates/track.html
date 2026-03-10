@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>📍 Request Tracking <span style="font-size:13px; color: var(--text-muted); font-weight:400;">ID #{{ r.request_id }}
+        — {{ r.item_name }}</span></h3>
+
+<div class="timeline-container">
+    <div style="display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
+        <div
+            style="flex:1; min-width:160px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:10px; padding:14px 18px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;">Item
+            </div>
+            <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-top:4px;">{{ r.item_name }}
+            </div>
+        </div>
+        <div
+            style="flex:1; min-width:130px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:10px; padding:14px 18px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;">
+                Quantity</div>
+            <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-top:4px;">{{ r.quantity }}
+            </div>
+        </div>
+        <div
+            style="flex:1; min-width:130px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:10px; padding:14px 18px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;">
+                Priority</div>
+            <div style="font-size:15px; font-weight:700; margin-top:4px;">
+                {% if r.priority == "High" %}<span style="color:#f87171;">🔴 {{ r.priority }}</span>
+                {% elif r.priority == "Medium" %}<span style="color:#fbbf24;">🟡 {{ r.priority }}</span>
+                {% else %}<span style="color:#34d399;">🟢 {{ r.priority }}</span>{% endif %}
+            </div>
+        </div>
+        <div
+            style="flex:1; min-width:130px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:10px; padding:14px 18px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;">
+                Current Stage</div>
+            <div style="font-size:15px; font-weight:700; color:var(--accent-3); margin-top:4px;">{{ r.current_stage }}
+            </div>
+        </div>
+    </div>
+
+    <ul class="timeline">
+        <li class="{{ r.accounts_status }}">
+            <strong style="color:var(--text-primary)">Accounts Officer</strong>
+            <b class="status-{{ r.accounts_status }}">{{ r.accounts_status }}</b>
+        </li>
+        <li class="{{ r.audit_status }}">
+            <strong style="color:var(--text-primary)">Audit Officer</strong>
+            <b class="status-{{ r.audit_status }}">{{ r.audit_status }}</b>
+        </li>
+        <li class="{{ r.purchase_status }}">
+            <strong style="color:var(--text-primary)">Purchase Officer</strong>
+            <b class="status-{{ r.purchase_status }}">{{ r.purchase_status }}</b>
+        </li>
+        <li class="{{ r.cao_status }}">
+            <strong style="color:var(--text-primary)">Chief Accounts Officer</strong>
+            <b class="status-{{ r.cao_status }}">{{ r.cao_status }}</b>
+        </li>
+        <li class="{{ r.registrar_status }}">
+            <strong style="color:var(--text-primary)">Registrar</strong>
+            <b class="status-{{ r.registrar_status }}">{{ r.registrar_status }}</b>
+        </li>
+    </ul>
+</div>
+
+{% if r.comments %}
+<div class="comments-box">
+    <b>Director Comments</b>
+    {{ r.comments }}
+</div>
+{% endif %}
+
+{% if selected_quote %}
+<div class="comments-box" style="border-left-color: var(--success);">
+    <b>✔ Selected Vendor Offer</b>
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:10px; margin-top:8px;">
+        <div><span style="color:var(--text-muted); font-size:11px;">VENDOR</span><br><strong>{{
+                selected_quote.vendor.name }}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">UNIT RATE</span><br><strong>₹{{
+                selected_quote.quoted_amount }}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">TAX %</span><br><strong>{{
+                selected_quote.tax_percent }}%</strong></div>
+    </div>
+    <div style="margin-top:14px;">
+        <a href="{{ url_for('download_vendor_offer_pdf', rid=r.request_id) }}">
+            <button class="btn-export">📄 Download Vendor PDF</button>
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% if po %}
+<div class="comments-box" style="border-left-color: var(--purple);">
+    <b>📦 Purchase Order</b>
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:10px; margin-top:8px;">
+        <div><span style="color:var(--text-muted); font-size:11px;">PO NUMBER</span><br><strong>{{ po.po_number
+                }}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">DATE</span><br><strong>{{ po.po_date }}</strong>
+        </div>
+        <div><span style="color:var(--text-muted); font-size:11px;">VENDOR</span><br><strong>{{ po.vendor.name
+                }}</strong></div>
+        <div><span style="color:var(--text-muted); font-size:11px;">TOTAL</span><br><strong>₹{{ po.total_amount
+                }}</strong></div>
+    </div>
+    <div style="margin-top:14px;">
+        <a href="{{ url_for('download_purchase_order', rid=r.request_id) }}">
+            <button class="btn-download">⬇ Download PO</button>
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<h3 style="margin-top:28px;">📋 Action Log</h3>
+{% if logs %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Stage</th>
+                <th>Action</th>
+                <th>Comments</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr style="animation-delay: {{ loop.index0 * 0.04 }}s">
+                <td style="font-size:12px; color:var(--text-muted); white-space:nowrap;">{{ log.timestamp }}</td>
+                <td style="font-weight:600; color:var(--accent-3)">{{ log.stage }}</td>
+                <td><span class="status-{{ log.action }}">{{ log.action }}</span></td>
+                <td style="text-align:left; color:var(--text-muted)">{{ log.comments or "—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="comments-box" style="border-left-color: var(--text-muted);">
+    <b>No Logs</b>No action log entries recorded yet.
+</div>
+{% endif %}
+
+{% endblock %}

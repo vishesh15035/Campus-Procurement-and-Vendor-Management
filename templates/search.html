@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>🔍 Search Requests</h3>
+
+<div style="margin-bottom:20px; display:flex; gap:10px; align-items:center;">
+    <form method="post" style="display:flex; gap:10px; align-items:center;">
+        <select name="status" style="padding:10px 14px; min-width:160px;">
+            <option value="">All Statuses</option>
+            <option>Pending</option>
+            <option>Approved</option>
+            <option>Rejected</option>
+        </select>
+        <button type="submit" class="btn-export">🔍 Search</button>
+    </form>
+</div>
+
+{% if results %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Item</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in results %}
+            <tr style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                <td><strong style="color:var(--accent-3)">#{{ r.request_id }}</strong></td>
+                <td style="font-weight:500; color:var(--text-primary); text-align:left">{{ r.item_name }}</td>
+                <td><span class="status-{{ r.status }}">{{ r.status }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>📊 Admin DBMS Reports</h3>
+
+<div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
+    <div
+        style="flex:1; min-width:180px; background: linear-gradient(135deg, rgba(79,70,229,0.2), rgba(124,58,237,0.15)); border:1px solid rgba(79,70,229,0.3); border-radius:12px; padding:18px 22px;">
+        <div
+            style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px;">
+            Total Notifications</div>
+        <div style="font-size:28px; font-weight:800; color:var(--text-primary); line-height:1;">{{ total_notifications
+            }}</div>
+    </div>
+    <div
+        style="flex:1; min-width:180px; background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(239,68,68,0.1)); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:18px 22px;">
+        <div
+            style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px;">
+            Unread Notifications</div>
+        <div style="font-size:28px; font-weight:800; color:#fbbf24; line-height:1;">{{ unread_notifications }}</div>
+    </div>
+</div>
+
+<h3>💰 Department Budgets</h3>
+{% if budgets %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Dept Code</th>
+                <th>Department Name</th>
+                <th>Financial Year</th>
+                <th>Allocated (₹)</th>
+                <th>Utilized (₹)</th>
+                <th>Available (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for budget, department_code, department_name in budgets %}
+            <tr style="animation-delay: {{ loop.index0 * 0.04 }}s">
+                <td style="font-family:monospace; color:var(--accent-3)">{{ department_code }}</td>
+                <td style="font-weight:600; color:var(--text-primary); text-align:left">{{ department_name }}</td>
+                <td>{{ budget.financial_year }}</td>
+                <td style="color:#34d399; font-weight:700;">₹{{ budget.allocated_amount }}</td>
+                <td style="color:#fbbf24; font-weight:600;">₹{{ budget.utilized_amount }}</td>
+                <td style="color:#60a5fa; font-weight:700;">₹{{ budget.reserved_amount }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="comments-box" style="border-left-color: var(--text-muted);">
+    <b>No Budget Data</b>No department budget rows found.
+</div>
+{% endif %}
+
+<h3 style="margin-top:32px;">💳 Payment Transactions</h3>
+{% if payments %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>PO Number</th>
+                <th>Vendor</th>
+                <th>Transaction Ref</th>
+                <th>Amount</th>
+                <th>Mode</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment, po_number, vendor_name in payments %}
+            <tr style="animation-delay: {{ loop.index0 * 0.04 }}s">
+                <td><strong style="color:var(--accent-3)">#{{ payment.payment_id }}</strong></td>
+                <td style="font-family:monospace; font-size:12px;">{{ po_number }}</td>
+                <td style="font-weight:600; color:var(--text-primary)">{{ vendor_name }}</td>
+                <td style="font-size:12px; font-family:monospace; color:var(--text-muted)">{{ payment.transaction_ref }}
+                </td>
+                <td style="color:#34d399; font-weight:700;">₹{{ payment.paid_amount }}</td>
+                <td style="font-size:12px;">{{ payment.payment_mode }}</td>
+                <td><span class="status-{{ payment.payment_status }}">{{ payment.payment_status }}</span></td>
+                <td style="font-size:12px; color:var(--text-muted); white-space:nowrap;">{{ payment.payment_date or "—"
+                    }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('update_payment_status', payment_id=payment.payment_id) }}"
+                        class="inline-form">
+                        <select name="payment_mode" required>
+                            {% for mode in ["NEFT", "RTGS", "UPI", "CHEQUE", "CASH"] %}
+                            <option value="{{ mode }}" {% if payment.payment_mode==mode %}selected{% endif %}>{{ mode }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <select name="payment_status" required>
+                            {% for status in ["Pending", "Processing", "Paid", "Failed"] %}
+                            <option value="{{ status }}" {% if payment.payment_status==status %}selected{% endif %}>{{
+                                status }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" name="remarks" placeholder="Remarks">
+                        <button type="submit" class="btn-approve">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="comments-box" style="border-left-color: var(--text-muted);">
+    <b>No Payments</b>No payment transactions recorded yet.
+</div>
+{% endif %}
+
+<h3 style="margin-top:32px;">⭐ Vendor Performance</h3>
+{% if performance_rows %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Request Item</th>
+                <th>Vendor</th>
+                <th>Overall</th>
+                <th>Quality</th>
+                <th>Delivery</th>
+                <th>Support</th>
+                <th>Comments</th>
+                <th>Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for performance, item_name, vendor_name in performance_rows %}
+            <tr style="animation-delay: {{ loop.index0 * 0.04 }}s">
+                <td><strong style="color:var(--accent-3)">#{{ performance.performance_id }}</strong></td>
+                <td style="font-weight:500; color:var(--text-primary); text-align:left">{{ item_name }}</td>
+                <td style="font-weight:600; color:var(--text-secondary)">{{ vendor_name }}</td>
+                <td>
+                    {% set rating = performance.overall_rating or 0 %}
+                    <span
+                        style="font-weight:700; color: {% if rating >= 8 %}#34d399{% elif rating >= 5 %}#fbbf24{% else %}#f87171{% endif %}">
+                        {{ rating }}/10
+                    </span>
+                </td>
+                <td style="color:var(--text-secondary)">{{ performance.quality_score or "—" }}</td>
+                <td style="color:var(--text-secondary)">{{ performance.delivery_score or "—" }}</td>
+                <td style="color:var(--text-secondary)">{{ performance.support_score or "—" }}</td>
+                <td style="font-size:12px; color:var(--text-muted); max-width:140px">{{ performance.review_comments or
+                    "—" }}</td>
+                <td>
+                    <form method="post"
+                        action="{{ url_for('update_vendor_performance', performance_id=performance.performance_id) }}"
+                        class="inline-form">
+                        <input type="number" name="quality_score" min="1" max="10"
+                            value="{{ performance.quality_score or 8 }}" required style="width:52px">
+                        <input type="number" name="delivery_score" min="1" max="10"
+                            value="{{ performance.delivery_score or 8 }}" required style="width:52px">
+                        <input type="number" name="support_score" min="1" max="10"
+                            value="{{ performance.support_score or 8 }}" required style="width:52px">
+                        <input type="text" name="review_comments" placeholder="Notes">
+                        <button type="submit" class="btn-approve">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="comments-box" style="border-left-color: var(--text-muted);">
+    <b>No Performance Data</b>No vendor performance entries recorded yet.
+</div>
+{% endif %}
+
+{% endblock %}

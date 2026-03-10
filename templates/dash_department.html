@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Department Dashboard <span style="font-size:13px; color: var(--text-muted); font-weight:400;">({{
+        session.designation }})</span></h3>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Dept</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Current Stage</th>
+                <th>Accounts</th>
+                <th>Audit</th>
+                <th>Purchase</th>
+                <th>CAO</th>
+                <th>Registrar</th>
+                <th>Vendor PDF</th>
+                <th>Purchase Order</th>
+                {% if session.designation == "HoD" %}
+                <th>Track</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in requests %}
+            <tr style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                <td><strong style="color:var(--accent-3)">#{{ r.request_id }}</strong></td>
+                <td><span style="font-size:12px; font-weight:600; color:var(--text-muted)">{{ r.department.department_code }}</span></td>
+                <td style="text-align:left; font-weight:500; color:var(--text-primary)">{{ r.item_name }}</td>
+                <td>{{ r.quantity }}</td>
+                <td><span class="status-{{ r.current_stage }}" style="font-size:12px;">{{ r.current_stage }}</span></td>
+                <td><span class="status-{{ r.accounts_status }}">{{ r.accounts_status }}</span></td>
+                <td><span class="status-{{ r.audit_status }}">{{ r.audit_status }}</span></td>
+                <td><span class="status-{{ r.purchase_status }}">{{ r.purchase_status }}</span></td>
+                <td><span class="status-{{ r.cao_status }}">{{ r.cao_status }}</span></td>
+                <td><span class="status-{{ r.registrar_status }}">{{ r.registrar_status }}</span></td>
+                <td>
+                    {% set has_selected_quote = r.vendor_quotes|selectattr("quote_status", "equalto",
+                    "Selected")|list|length > 0 %}
+                    {% if has_selected_quote %}
+                    <a href="{{ url_for('download_vendor_offer_pdf', rid=r.request_id) }}">
+                        <button class="btn-export">📄 Vendor PDF</button>
+                    </a>
+                    {% else %}
+                    <span style="color:var(--text-muted)">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if r.purchase_order %}
+                    <a href="{{ url_for('download_purchase_order', rid=r.request_id) }}">
+                        <button class="btn-download">⬇ Download PO</button>
+                    </a>
+                    {% else %}
+                    <span style="color:var(--text-muted)">—</span>
+                    {% endif %}
+                </td>
+
+                {% if session.designation == "HoD" %}
+                <td>
+                    <a href="/track/{{ r.request_id }}">
+                        <button class="btn-track">📍 Track</button>
+                    </a>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

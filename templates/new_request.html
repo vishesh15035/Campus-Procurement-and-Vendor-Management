@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>✚ Create Purchase Request</h3>
+
+<div class="form-card">
+  <form method="post" autocomplete="off">
+    <div class="form-group">
+      <label>Department</label>
+      <select name="department_id" required>
+        <option value="" disabled selected>Select Department</option>
+        {% for dept in departments %}
+        <option value="{{ dept.department_id }}">{{ dept.department_name }} ({{ dept.department_code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Item Name</label>
+      <input type="text" name="item" placeholder="e.g. Dell Latitude Laptops" autocomplete="off" required>
+    </div>
+    <div class="form-group">
+      <label>Quantity</label>
+      <input type="number" name="qty" min="1" placeholder="e.g. 10" autocomplete="off" required>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn-submit">📤 Submit Request</button>
+      <a href="/dashboard" class="btn-cancel">← Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

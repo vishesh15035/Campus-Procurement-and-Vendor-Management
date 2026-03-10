@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>🏢 Vendor Management</h3>
+
+<div class="page-actions">
+    <a href="{{ url_for('add_vendor') }}" class="btn-submit">✚ Add New Vendor</a>
+    <a href="{{ url_for('manage_vendor_quotes') }}" class="btn-export">📋 Manage Quotations</a>
+</div>
+
+{% if vendors %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Vendor Name</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>GST No</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vendor in vendors %}
+            <tr style="animation-delay: {{ loop.index0 * 0.04 }}s">
+                <td><strong style="color:var(--accent-3)">#{{ vendor.vendor_id }}</strong></td>
+                <td style="text-align:left; font-weight:600; color:var(--text-primary)">{{ vendor.name }}</td>
+                <td style="color:var(--text-secondary)">{{ vendor.contact_person }}</td>
+                <td style="font-size:12px; color:var(--text-muted)">{{ vendor.email }}</td>
+                <td style="font-size:12px;">{{ vendor.phone }}</td>
+                <td style="font-size:11px; color:var(--text-muted); max-width:120px;">{{ vendor.address }}</td>
+                <td style="font-size:12px; font-family:monospace;">{{ vendor.gst_no }}</td>
+                <td style="font-size:12px;">{{ vendor.category }}</td>
+                <td><b class="status-{{ vendor.status }}">{{ vendor.status }}</b></td>
+                <td>
+                    <form method="post" action="{{ url_for('update_vendor_status', vendor_id=vendor.vendor_id) }}"
+                        class="inline-form">
+                        <select name="status" required>
+                            <option value="Active" {% if vendor.status=="Active" %}selected{% endif %}>Active</option>
+                            <option value="Pending" {% if vendor.status=="Pending" %}selected{% endif %}>Pending
+                            </option>
+                            <option value="Blacklisted" {% if vendor.status=="Blacklisted" %}selected{% endif %}>
+                                Blacklisted</option>
+                        </select>
+                        <button type="submit" class="btn-approve">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="comments-box" style="border-left-color: var(--text-muted);">
+    <b>No Vendors</b>No vendors found. Add your first vendor using the button above.
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Admin Dashboard <span style="font-size:13px; color: var(--text-muted); font-weight:400;">({{ session.designation
+        }})</span></h3>
+
+<div class="export-bar">
+    <a href="/export/csv" class="btn btn-export">📥 Download CSV</a>
+    <a href="/export/pdf" class="btn btn-export">📄 Download PDF</a>
+    <a href="{{ url_for('admin_reports') }}" class="btn btn-download">📊 DBMS Reports</a>
+    <a href="{{ url_for('list_vendors') }}" class="btn btn-download">🏢 Vendors</a>
+    <a href="{{ url_for('manage_vendor_quotes') }}" class="btn btn-submit">📋 Vendor Quotes</a>
+</div>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Dept</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Stage</th>
+                <th>Priority</th>
+                <th>Accounts</th>
+                <th>Audit</th>
+                <th>Purchase</th>
+                <th>CAO</th>
+                <th>Registrar</th>
+                <th>Comments</th>
+                <th>PO</th>
+                <th>Actions</th>
+                <th>Track</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in requests %}
+            <tr style="animation-delay: {{ loop.index0 * 0.04 }}s">
+                <td><strong style="color:var(--accent-3)">#{{ r.request_id }}</strong></td>
+                <td><span style="font-size:12px; font-weight:600; color:var(--text-muted)">{{ r.department.department_code }}</span></td>
+                <td style="text-align:left; font-weight:500; color:var(--text-primary)">{{ r.item_name }}</td>
+                <td>{{ r.quantity }}</td>
+                <td><span class="status-{{ r.current_stage }}" style="font-size:12px;">{{ r.current_stage }}</span></td>
+                <td>
+                    {% if r.priority == "High" %}
+                    <span style="color:#f87171; font-weight:700; font-size:12px;">🔴 {{ r.priority }}</span>
+                    {% elif r.priority == "Medium" %}
+                    <span style="color:#fbbf24; font-weight:700; font-size:12px;">🟡 {{ r.priority }}</span>
+                    {% else %}
+                    <span style="color:#34d399; font-weight:700; font-size:12px;">🟢 {{ r.priority }}</span>
+                    {% endif %}
+                </td>
+                <td><span class="status-{{ r.accounts_status }}">{{ r.accounts_status }}</span></td>
+                <td><span class="status-{{ r.audit_status }}">{{ r.audit_status }}</span></td>
+                <td><span class="status-{{ r.purchase_status }}">{{ r.purchase_status }}</span></td>
+                <td><span class="status-{{ r.cao_status }}">{{ r.cao_status }}</span></td>
+                <td><span class="status-{{ r.registrar_status }}">{{ r.registrar_status }}</span></td>
+                <td style="max-width:140px; font-size:12px; color:var(--text-muted)">{{ r.comments or "—" }}</td>
+                <td>
+                    {% if r.purchase_order %}
+                    <a href="{{ url_for('download_purchase_order', rid=r.request_id) }}">
+                        <button class="btn-download">⬇ PO</button>
+                    </a>
+                    {% else %}
+                    <span style="color:var(--text-muted)">—</span>
+                    {% endif %}
+                </td>
+
+                <!-- ACTIONS COLUMN -->
+                <td>
+                    <!-- CAO APPROVAL -->
+                    {% if session.designation == "Chief Accounts Officer" and r.purchase_status == "Approved" and
+                    r.cao_status == "Pending" %}
+                    <form method="post" action="/approve/cao/{{ r.request_id }}" class="inline-form">
+                        <select name="decision" required>
+                            <option value="">Select</option>
+                            <option value="Approved">✓ Approve</option>
+                            <option value="Rejected">✕ Reject</option>
+                            <option value="Discuss">💬 Discuss</option>
+                        </select>
+                        <input type="text" name="remark" placeholder="Remark…" required>
+                        <button type="submit" class="btn-approve">Go</button>
+                    </form>
+                    {% endif %}
+
+                    <!-- REGISTRAR DECISION -->
+                    {% if session.designation == "Registrar" and r.cao_status == "Approved" and r.registrar_status ==
+                    "Pending" %}
+                    <form method="post" action="/approve/registrar/{{ r.request_id }}" class="inline-form">
+                        <select name="decision" required>
+                            <option value="">Select</option>
+                            <option value="Approved">✓ Approve</option>
+                            <option value="Rejected">✕ Reject</option>
+                            <option value="Discuss">💬 Discuss</option>
+                        </select>
+                        <input type="text" name="remark" placeholder="Remark…" required>
+                        <button type="submit" class="btn-approve">Go</button>
+                    </form>
+                    {% endif %}
+
+                    <!-- DIRECTOR PRIORITY + COMMENTS -->
+                    {% if session.designation == "Director" %}
+                    <form method="post" action="/director/update/{{ r.request_id }}" class="inline-form">
+                        <select name="priority" required>
+                            <option value="Low" {% if r.priority=="Low" %}selected{% endif %}>🟢 Low</option>
+                            <option value="Medium" {% if r.priority=="Medium" %}selected{% endif %}>🟡 Medium</option>
+                            <option value="High" {% if r.priority=="High" %}selected{% endif %}>🔴 High</option>
+                        </select>
+                        <input type="text" name="comments" placeholder="Director note…" required>
+                        <button type="submit" class="btn-approve">Update</button>
+                    </form>
+                    {% endif %}
+
+                    {% if not (
+                    (session.designation == "Chief Accounts Officer" and r.purchase_status == "Approved" and
+                    r.cao_status == "Pending") or
+                    (session.designation == "Registrar" and r.cao_status == "Approved" and r.registrar_status ==
+                    "Pending") or
+                    session.designation == "Director"
+                    ) %}
+                    <span style="color:var(--text-muted)">—</span>
+                    {% endif %}
+                </td>
+
+                <!-- TRACK -->
+                <td>
+                    <a href="/track/{{ r.request_id }}">
+                        <button class="btn-track">📍 Track</button>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

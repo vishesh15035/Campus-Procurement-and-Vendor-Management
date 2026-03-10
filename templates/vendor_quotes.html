@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>📋 Vendor Quotations</h3>
+
+<div class="form-card quote-form-card">
+    <h3 style="border:none; margin-bottom:20px;">✚ Add New Quotation</h3>
+    <form method="post" autocomplete="off">
+        <div class="form-group">
+            <label>Purchase Request</label>
+            <select name="request_id" required>
+                <option value="">Select Request</option>
+                {% for req in purchase_requests %}
+                <option value="{{ req.request_id }}" {% if request.args.get('request_id') == req.request_id|string %}selected{% endif %}>
+                    #{{ req.request_id }} — {{ req.item_name }} ({{ req.current_stage }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Vendor</label>
+            <select name="vendor_id" required>
+                <option value="">Select Vendor</option>
+                {% for vendor in vendors %}
+                <option value="{{ vendor.vendor_id }}">
+                    {{ vendor.name }} ({{ vendor.status }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="form-group">
+                <label>Quoted Amount (₹)</label>
+                <input type="number" name="quoted_amount" min="1" step="0.01" placeholder="e.g. 12500.00" required>
+            </div>
+            <div class="form-group">
+                <label>Tax %</label>
+                <input type="number" name="tax_percent" min="0" step="0.01" value="18" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Delivery Timeline (Days)</label>
+            <input type="number" name="delivery_days" min="1" placeholder="e.g. 14" required>
+        </div>
+
+        <div class="form-group">
+            <label>Notes (Optional)</label>
+            <input type="text" name="notes" placeholder="Any additional notes…">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">💾 Save Quotation</button>
+            <a href="{{ url_for('list_vendors') }}" class="btn-cancel">← Back</a>
+        </div>
+    </form>
+</div>
+
+<h3 style="margin-top:32px;">📑 Saved Quotations</h3>
+{% if quotes %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Quote ID</th>
+                <th>Request</th>
+                <th>Vendor</th>
+                <th>Unit Rate</th>
+                <th>Tax %</th>
+                <th>Delivery (Days)</th>
+                <th>Status</th>
+                <th>Notes</th>
+                <th>Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quote in quotes %}
+            <tr style="animation-delay: {{ loop.index0 * 0.04 }}s">
+                <td><strong style="color:var(--accent-3)">#{{ quote.quote_id }}</strong></td>
+                <td style="text-align:left; font-weight:500; color:var(--text-primary);">#{{ quote.request.request_id }}
+                    — {{ quote.request.item_name }}</td>
+                <td style="font-weight:600; color:var(--text-secondary)">{{ quote.vendor.name }}</td>
+                <td style="font-weight:700; color:#34d399">₹{{ quote.quoted_amount }}</td>
+                <td>{{ quote.tax_percent }}%</td>
+                <td>{{ quote.delivery_days }}d</td>
+                <td><b class="status-{{ quote.quote_status }}">{{ quote.quote_status }}</b></td>
+                <td style="font-size:12px; color:var(--text-muted); max-width:120px">{{ quote.notes or "—" }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('update_quote_status', quote_id=quote.quote_id) }}"
+                        class="inline-form">
+                        <select name="quote_status" required>
+                            <option value="Submitted" {% if quote.quote_status=="Submitted" %}selected{% endif %}>
+                                Submitted</option>
+                            <option value="Shortlisted" {% if quote.quote_status=="Shortlisted" %}selected{% endif %}>
+                                Shortlisted</option>
+                            <option value="Selected" {% if quote.quote_status=="Selected" %}selected{% endif %}>Selected
+                            </option>
+                            <option value="Rejected" {% if quote.quote_status=="Rejected" %}selected{% endif %}>Rejected
+                            </option>
+                        </select>
+                        <button type="submit" class="btn-approve">Save</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="comments-box" style="border-left-color: var(--text-muted);">
+    <b>No Quotations</b>No vendor quotations have been added yet.
+</div>
+{% endif %}
+
+{% endblock %}

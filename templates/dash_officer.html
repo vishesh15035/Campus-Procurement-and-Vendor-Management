@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Officer Dashboard <span style="font-size:13px; color: var(--text-muted); font-weight:400;">({{ session.designation
+        }})</span></h3>
+
+{% if session.designation == "Purchase Officer" %}
+<div class="page-actions">
+    <a href="{{ url_for('list_vendors') }}" class="btn btn-export">🏢 Vendors</a>
+    <a href="{{ url_for('manage_vendor_quotes') }}" class="btn btn-submit">📋 Vendor Quotes</a>
+</div>
+{% endif %}
+
+{% if requests|length == 0 %}
+<div class="comments-box" style="border-left-color: var(--text-muted);">
+    <b>No Requests</b>
+    No pending requests are available for your review at this time.
+</div>
+{% else %}
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Dept</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Current Stage</th>
+                <th>Accounts</th>
+                <th>Audit</th>
+                <th>Purchase</th>
+                <th>CAO</th>
+                <th>Registrar</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in requests %}
+            <tr style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                <td><strong style="color:var(--accent-3)">#{{ r.request_id }}</strong></td>
+                <td><span style="font-size:12px; font-weight:600; color:var(--text-muted)">{{ r.department.department_code }}</span></td>
+                <td style="text-align:left; font-weight:500; color:var(--text-primary)">{{ r.item_name }}</td>
+                <td>{{ r.quantity }}</td>
+                <td><span class="status-{{ r.current_stage }}" style="font-size:12px;">{{ r.current_stage }}</span></td>
+                <td><span class="status-{{ r.accounts_status }}">{{ r.accounts_status }}</span></td>
+                <td><span class="status-{{ r.audit_status }}">{{ r.audit_status }}</span></td>
+                <td><span class="status-{{ r.purchase_status }}">{{ r.purchase_status }}</span></td>
+                <td><span class="status-{{ r.cao_status }}">{{ r.cao_status }}</span></td>
+                <td><span class="status-{{ r.registrar_status }}">{{ r.registrar_status }}</span></td>
+
+                <td>
+                    <!-- ACCOUNTS OFFICER -->
+                    {% if session.designation == "Accounts Officer" and r.current_stage == "Accounts" %}
+                    <form method="post" action="/approve/accounts/{{ r.request_id }}" class="inline-form">
+                        <select name="decision" required>
+                            <option value="">Select</option>
+                            <option value="Approved">✓ Approve</option>
+                            <option value="Rejected">✕ Reject</option>
+                        </select>
+                        <input type="text" name="remark" placeholder="Remark…" required>
+                        <button type="submit" class="btn-approve">Submit</button>
+                    </form>
+                    {% endif %}
+
+                    <!-- AUDIT OFFICER -->
+                    {% if session.designation == "Audit Officer" and r.current_stage == "Audit" %}
+                    <form method="post" action="/approve/audit/{{ r.request_id }}" class="inline-form">
+                        <select name="decision" required>
+                            <option value="">Select</option>
+                            <option value="Approved">✓ Approve</option>
+                            <option value="Rejected">✕ Reject</option>
+                        </select>
+                        <input type="text" name="remark" placeholder="Remark…" required>
+                        <button type="submit" class="btn-approve">Submit</button>
+                    </form>
+                    {% endif %}
+
+                    <!-- PURCHASE OFFICER -->
+                    {% if session.designation == "Purchase Officer" and r.current_stage == "Purchase" %}
+                    {% set quotes = r.vendor_quotes %}
+                    {% set selected_quote = r.vendor_quotes | selectattr("quote_status", "equalto", "Selected") | list |
+                    first |
+                    default(None) %}
+
+                    {% if selected_quote %}
+                    <p style="margin:4px 0; color: #34d399; font-size: 0.82em; font-weight:600;">
+                        ✔ <strong>{{ selected_quote.vendor.name }}</strong> — ₹{{
+                        "%.2f"|format(selected_quote.quoted_amount) }}
+                    </p>
+                    {% else %}
+                    <p style="margin:4px 0; color: #fbbf24; font-size: 0.82em; font-weight:600;">⚠ No quote selected yet
+                    </p>
+                    {% endif %}
+
+                    {% if quotes | length > 0 %}
+                    <form method="post" action="/purchase/select-quote/{{ r.request_id }}" class="inline-form"
+                        style="margin-bottom:6px;">
+                        <select name="quote_id" required>
+                            <option value="">— Assign Quote —</option>
+                            {% for q in quotes %}
+                            <option value="{{ q.quote_id }}" {% if q.quote_status=="Selected" %}selected{% endif %}>
+                                Q#{{ q.quote_id }} | {{ q.vendor.name }} | ₹{{ "%.2f"|format(q.quoted_amount) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn-export">Select</button>
+                    </form>
+                    {% else %}
+                    <a href="{{ url_for('manage_vendor_quotes', request_id=r.request_id) }}" class="btn-export" style="padding:4px 8px; font-size:12px; margin-bottom:6px; display:inline-block; border-radius:4px;">✚ Add Quote</a>
+                    {% endif %}
+
+                    <form method="post" action="/approve/purchase/{{ r.request_id }}" class="inline-form">
+                        <select name="decision" required>
+                            <option value="">Decision</option>
+                            <option value="Approved">✓ Approve → CAO</option>
+                            <option value="Rejected">✕ Reject</option>
+                        </select>
+                        <input type="text" name="remark" placeholder="Remark…" required>
+                        <button type="submit" class="btn-approve">Submit</button>
+                    </form>
+                    {% endif %}
+
+                    <!-- CHIEF ACCOUNTS OFFICER -->
+                    {% if session.designation == "Chief Accounts Officer" and r.current_stage == "CAO" %}
+                    <form method="post" action="/approve/cao/{{ r.request_id }}" class="inline-form">
+                        <select name="decision" required>
+                            <option value="">Select</option>
+                            <option value="Approved">✓ Approve</option>
+                            <option value="Rejected">✕ Reject</option>
+                            <option value="Discuss">💬 Discuss</option>
+                        </select>
+                        <input type="text" name="remark" placeholder="Remark…" required>
+                        <button type="submit" class="btn-approve">Submit</button>
+                    </form>
+                    {% endif %}
+
+                    <!-- REGISTRAR -->
+                    {% if session.designation == "Registrar" and r.current_stage == "Registrar" %}
+                    <form method="post" action="/approve/registrar/{{ r.request_id }}" class="inline-form">
+                        <select name="decision" required>
+                            <option value="">Select</option>
+                            <option value="Approved">✓ Approve</option>
+                            <option value="Rejected">✕ Reject</option>
+                            <option value="Discuss">💬 Discuss</option>
+                        </select>
+                        <input type="text" name="remark" placeholder="Remark…" required>
+                        <button type="submit" class="btn-approve">Submit</button>
+                    </form>
+                    {% endif %}
+
+                    <!-- View only -->
+                    {% if (r.current_stage != session.get_stage | default('') ) %}
+                    {% if not (
+                    (session.designation == "Accounts Officer" and r.current_stage == "Accounts") or
+                    (session.designation == "Audit Officer" and r.current_stage == "Audit") or
+                    (session.designation == "Purchase Officer" and r.current_stage == "Purchase") or
+                    (session.designation == "Chief Accounts Officer" and r.current_stage == "CAO") or
+                    (session.designation == "Registrar" and r.current_stage == "Registrar")
+                    ) %}
+                    <span style="color:var(--text-muted); font-size:0.9em;">—</span>
+                    {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

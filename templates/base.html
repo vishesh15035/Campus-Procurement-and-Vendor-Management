@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Procurement & Vendor Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <header>
+        <div class="header-left">
+            <h2>🎓 Campus Procurement & Vendor Management</h2>
+        </div>
+        <div class="header-right">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Logo">
+        </div>
+    </header>
+
+    <nav>
+        {% if session.get("user_id") %}
+        <a href="{{ url_for('dashboard') }}">⊞ Dashboard</a>
+        {% if session.get("role") == "Department" %}
+        <a href="{{ url_for('new_request') }}">✚ New Request</a>
+        {% endif %}
+        {% if session.get("designation") in ["Purchase Officer", "Director", "Admin"] or session.get("role") == "Admin"
+        %}
+        <a href="{{ url_for('list_vendors') }}">🏢 Vendors</a>
+        <a href="{{ url_for('manage_vendor_quotes') }}">📋 Vendor Quotes</a>
+        {% endif %}
+        {% if session.get("role") == "Admin" %}
+        <a href="{{ url_for('admin_reports') }}">📊 DBMS Reports</a>
+        {% endif %}
+        {% if unread_notification_count > 0 %}
+        <a href="{{ url_for('mark_all_notifications_read') }}">🔔 Notifications ({{ unread_notification_count }})</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}">⏻ Logout</a>
+        {% else %}
+        <a href="{{ url_for('login') }}">🔑 Login</a>
+        {% endif %}
+    </nav>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-stack">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        ✦ DBMS Mini Project &mdash; Advanced Campus Procurement &amp; Vendor Management System ✦
+    </footer>
+
+</body>
+
+</html>
